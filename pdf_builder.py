@@ -43,12 +43,15 @@ def _register_fonts() -> None:
     _FONTS_READY = True
 
 
-def _styles(scale: float = 1.0) -> dict[str, ParagraphStyle]:
+def _styles(scale: float = 1.0, air: float = 1.0) -> dict[str, ParagraphStyle]:
     def style(name, size=9.0, leading=None, **kw):
         kw.setdefault("fontName", "Vera")
         kw.setdefault("textColor", NAVY)
         kw.setdefault("alignment", TA_LEFT)
-        return ParagraphStyle(name, fontSize=round(size * scale, 2), leading=round((leading or size * 1.35) * scale, 2), **kw)
+        for k in ("spaceBefore", "spaceAfter"):
+            if k in kw:
+                kw[k] = round(kw[k] * scale * air, 2)
+        return ParagraphStyle(name, fontSize=round(size * scale, 2), leading=round((leading or size * 1.35) * scale * (1 + (air - 1) * 0.5), 2), **kw)
 
     return {
         "section": style("section", fontName="Vera-Bold", size=9.5, leading=12, textColor=BLUE, spaceBefore=12, spaceAfter=2),
@@ -147,11 +150,11 @@ def _frame(x, y, w, h, ident) -> Frame:
     return Frame(x, y, w, h, id=ident, leftPadding=0, rightPadding=0, topPadding=0, bottomPadding=0)
 
 
-def _compile(data: dict, processed: dict, scale: float, two_column: bool) -> bytes:
+def _compile(data: dict, processed: dict, scale: float, two_column: bool, air: float = 1.0) -> bytes:
     buf = io.BytesIO()
     doc = BaseDocTemplate(buf, pagesize=A4, leftMargin=MARGIN, rightMargin=MARGIN, topMargin=MARGIN, bottomMargin=MARGIN,
                           title=f"{data['personal']['name']} - Resume", author=data["personal"]["name"])
-    st = _styles(scale)
+    st = _styles(scale, air)
     left_w = PAGE_W - 2 * MARGIN - SIDEBAR_W - GUTTER
     first_h, later_h = PAGE_H - HEADER_H - MARGIN, PAGE_H - 2 * MARGIN
     left, right = _left_story(processed, st), _right_story(data, st)
@@ -180,8 +183,18 @@ def build_pdf(data: dict) -> bytes:
     processed = enhance(data)
     left_w = PAGE_W - 2 * MARGIN - SIDEBAR_W - GUTTER
     height = PAGE_H - HEADER_H - MARGIN
-    for scale in (1.0, 0.94, 0.88, 0.82):                     # shrink type a little before spilling over
-        st = _styles(scale)
-        if _fits(_left_story(processed, st), left_w, height) and _fits(_right_story(data, st), SIDEBAR_W, height):
-            return _compile(data, processed, scale, two_column=True)
+    # Fit to the page: grow short resumes so the page is not mostly empty, shrink long ones a little
+    # before spilling over. Largest scale whose two columns both fit wins.
+    for scale in [round(1.5 - 0.03 * i, 2) for i in range(23)]:      # 1.5 down to 0.84
+        if _both_fit(processed, data, scale, 1.0, left_w, height):
+            # type is as big as it gets: spend leftover height on breathing room between items
+            for air in (1.9, 1.7, 1.5, 1.35, 1.2, 1.1):
+                if _both_fit(processed, data, scale, air, left_w, height):
+                    return _compile(data, processed, scale, True, air)
+            return _compile(data, processed, scale, True)
     return _compile(data, processed, 1.0, two_column=False)
+
+
+def _both_fit(processed: dict, data: dict, scale: float, air: float, left_w: float, height: float) -> bool:
+    st = _styles(scale, air)
+    return _fits(_left_story(processed, st), left_w, height * 0.97) and _fits(_right_story(data, st), SIDEBAR_W, height * 0.97)

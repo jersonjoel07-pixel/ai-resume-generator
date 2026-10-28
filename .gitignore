@@ -4,3 +4,6 @@ __pycache__/
 *.pyc
 server.log
 *.pdf
+shots/
+.impeccable/
+PRODUCT.md

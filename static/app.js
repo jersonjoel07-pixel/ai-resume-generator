@@ -149,5 +149,66 @@
     say("Sample data loaded. Press Next, or jump to the last step and generate.", "good");
   });
 
+  // ---------- live proof: the real PDF, rebuilt shortly after you stop typing (wide screens only) ----------
+  var proofEl = $("#proof"), emptyEl = $("#proof-empty"), stateEl = $("#proof-state"), dlBtn = $("#proof-dl");
+  var wide = window.matchMedia("(min-width: 1040px)"), proofUrl = null, proofName = "resume.pdf", seq = 0, timer = null;
+
+  function readiness() {
+    var d = collect(), p = d.personal;
+    var tech = d.skills.technical.split(/[,\n;]+/).some(function (s) { return s.trim(); });
+    var rowsOk = d.experience.every(function (e) { return e.title.trim() && e.company.trim(); }) &&
+                 d.education.every(function (e) { return e.degree.trim() && e.institution.trim(); });
+    var r = { name: !!p.name.trim(), role: !!p.role.trim(), email: EMAIL.test(p.email.trim()), skill: tech };
+    r.ok = r.name && r.role && r.email && r.skill && rowsOk;
+    return r;
+  }
+  function setState(text, cls) { stateEl.textContent = text; stateEl.className = "proof-state" + (cls ? " " + cls : ""); }
+  function refreshProof() {
+    var r = readiness();
+    $$("#checks li").forEach(function (li) { li.classList.toggle("ok", !!r[li.getAttribute("data-k")]); });
+    if (!r.ok) { if (!proofUrl) setState("Waiting for the required fields"); return; }
+    var mine = ++seq; setState("Updating...", "busy");
+    post("/generate", collect()).then(function (res) {
+      if (!res.ok) throw new Error("bad");
+      var m = /filename="?([^";]+)"?/.exec(res.headers.get("Content-Disposition") || ""); if (m) proofName = m[1];
+      return res.blob();
+    }).then(function (blob) {
+      if (mine !== seq) return;                                   // a newer request is already on its way
+      if (proofUrl) URL.revokeObjectURL(proofUrl);
+      proofUrl = URL.createObjectURL(blob);
+      proofEl.src = proofUrl + "#toolbar=0&navpanes=0&view=FitH";
+      proofEl.hidden = false; emptyEl.hidden = true; dlBtn.disabled = false;
+      setState("Up to date", "live");
+    }).catch(function () { if (mine === seq) setState("Proof unavailable. Check your entries."); });
+  }
+  function scheduleProof() {
+    if (!wide.matches) return;
+    var r = readiness(); $$("#checks li").forEach(function (li) { li.classList.toggle("ok", !!r[li.getAttribute("data-k")]); });
+    clearTimeout(timer); timer = setTimeout(refreshProof, 700);
+  }
+  $("#form").addEventListener("input", scheduleProof);
+  $("#form").addEventListener("click", function (e) { if (e.target.closest(".x, #add-exp, #add-edu, #sample")) setTimeout(scheduleProof, 0); });
+  wide.addEventListener("change", scheduleProof);
+  dlBtn.addEventListener("click", function () {
+    if (!proofUrl) return;
+    var a = document.createElement("a"); a.href = proofUrl; a.download = proofName; document.body.appendChild(a); a.click(); a.remove();
+  });
+
+  // ---------- theme switch: follows the system until the user picks one, then remembers it ----------
+  var root = document.documentElement, themeBtn = $("#theme"), themeLabel = $("#theme-label");
+  function isDark() { return root.getAttribute("data-theme") ? root.getAttribute("data-theme") === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches; }
+  function paintTheme() { themeLabel.textContent = isDark() ? "Light mode" : "Dark mode"; }
+  themeBtn.addEventListener("click", function () {
+    var next = isDark() ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("theme", next); } catch (e) { /* private mode: the choice just lasts this visit */ }
+    paintTheme();
+  });
+  paintTheme();
+
   show(0);
+  // /#demo opens with the sample resume loaded; /#demo=3 also jumps to step 4 (handy for demos and screenshots)
+  var demo = /^#demo(?:=([1-5]))?$/.exec(location.hash);
+  if (demo) { $("#sample").click(); if (demo[1]) show(+demo[1] - 1); }
+  scheduleProof();
 })();

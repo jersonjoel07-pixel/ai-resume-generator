@@ -1,11 +1,25 @@
-# AI Resume Generator
+﻿# AI Resume Generator
 
 **Live demo: https://ai-resume-generator-tpba.onrender.com/**
 (Free hosting sleeps when idle, so the first load can take about 30 seconds.)
 
 A web app that turns a five-step form into a clean, two-column, ATS-friendly PDF resume. No sign-up, nothing is stored.
 
-Try it fast: open the demo and click **Fill with sample data**, then go to the last step and press **Generate PDF**.
+Try it fast: open the demo and click **Fill with sample data**, or open `/#demo` to land with the sample already loaded. On a wide screen the **Live proof** panel redraws the real PDF as you type, and **Download** saves it.
+
+## Screenshots
+
+**Wizard with the live proof** (the right-hand page is the actual PDF the server builds):
+
+![Wizard on step 2 with the live PDF proof beside it](docs/ui-desktop.png)
+
+**The generated PDF** (A4, one page, text scales to fill the page):
+
+<img src="docs/resume-pdf.png" alt="Generated two-column resume PDF" width="480">
+
+**On a phone** the proof panel hides and the same wizard fills the screen:
+
+<img src="docs/mobile.png" alt="Wizard on a phone-sized screen" width="300">
 
 ## What it does
 
@@ -17,7 +31,8 @@ Try it fast: open the demo and click **Fill with sample data**, then go to the l
    - bullets that already start with a strong verb are left alone
 3. **Auto summary**: if the summary box is blank, one is written from the target role, years of experience (calculated from the dates), the top skills, the latest job and the degree.
 4. **Preview**: shows the rewritten bullets and summary before you download.
-5. **PDF output**: a two-column layout (experience on the left, skills, education and certifications in a sidebar on the right). It shrinks the font slightly, then falls back to a multi-page single column, if the content is long.
+5. **Live proof**: on screens 1040 px or wider, the real PDF is rebuilt about 0.7 s after you stop typing and shown next to the form, so you see exactly what you will download. A checklist of the four required fields ticks as you fill them.
+6. **PDF output**: a two-column A4 layout (experience on the left; education, skills and certifications in a sidebar). The type is scaled to fit the page: short resumes get larger text and more spacing so the page is not mostly empty, long ones shrink a little, and very long ones fall back to a multi-page single column. Nothing is ever cut off.
 
 ## How it works
 
@@ -26,7 +41,7 @@ The "AI" is a set of plain Python rules, not a paid model or external API, so it
 - `resume_logic.py`: cleans and size-limits input, validates it, and holds the verb rules (a list of weak openers, an ordered keyword-to-verb table, and a gerund-to-past-tense map).
 - `pdf_builder.py`: builds the PDF with ReportLab Platypus entirely in memory (`io.BytesIO`), using the fonts bundled with ReportLab. User text is escaped so characters like `<` and `&` cannot break the layout.
 - `app.py`: Flask routes. `/` serves the wizard, `/preview` and `/generate` take JSON and return the processed text or the PDF, `/health` is for the host. Bad input returns HTTP 400 with per-field errors. Request size is capped at 256 KB.
-- `templates/` and `static/`: the wizard in plain HTML, CSS and JavaScript (no framework). Light and dark themes follow the system setting.
+- `templates/` and `static/`: the wizard in plain HTML, CSS and JavaScript (no framework). Light and dark themes follow the system setting, and a toggle in the header switches them (the choice is remembered in the browser). The look is a print-shop proof table: a CMYK colour strip, crop marks around the live page, cyan for actions and magenta for problems.
 
 Limits: the rules cover common phrasing, not every sentence. Unknown phrases get a sensible fallback verb, so review the preview and edit anything that reads wrong.
 
