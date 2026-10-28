@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Resume Generator</title>
+<meta name="description" content="Build a clean two-column, ATS-friendly PDF resume in five steps. Free, no sign-up, nothing stored.">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="logo" aria-hidden="true">R</span><span>AI Resume Generator</span></div>
+  <p class="tag">Five steps to an ATS-friendly PDF. Free, no sign-up, nothing is stored.</p>
+</header>
+
+<main class="shell">
+  <ol class="stepper" id="stepper" aria-label="Progress">
+    <li data-step="0"><span>1</span>Personal</li>
+    <li data-step="1"><span>2</span>Experience</li>
+    <li data-step="2"><span>3</span>Education</li>
+    <li data-step="3"><span>4</span>Skills</li>
+    <li data-step="4"><span>5</span>Summary</li>
+  </ol>
+
+  <form id="form" novalidate autocomplete="off">
+    <section class="step" data-step="0" aria-labelledby="h0">
+      <h2 id="h0">Personal details</h2>
+      <p class="hint">The basics recruiters look for first.</p>
+      <div class="grid">
+        <label>Full name *<input name="name" data-req autocomplete="name" placeholder="Asha Verma"><small class="err"></small></label>
+        <label>Target role *<input name="role" data-req placeholder="Junior Data Analyst"><small class="err"></small></label>
+        <label>Email *<input name="email" data-req data-email type="email" autocomplete="email" placeholder="you@example.com"><small class="err"></small></label>
+        <label>Phone<input name="phone" autocomplete="tel" placeholder="+91 90000 00000"></label>
+        <label>Location<input name="location" placeholder="Chennai, India"></label>
+        <label>Profile link<input name="link" placeholder="github.com/yourname"></label>
+      </div>
+    </section>
+
+    <section class="step" data-step="1" aria-labelledby="h1">
+      <h2 id="h1">Work experience</h2>
+      <p class="hint">Internships and projects count. Describe each task on its own line; weak openers get an action verb automatically.</p>
+      <div id="exp-rows"></div>
+      <button type="button" class="ghost" id="add-exp">+ Add experience</button>
+    </section>
+
+    <section class="step" data-step="2" aria-labelledby="h2">
+      <h2 id="h2">Education</h2>
+      <p class="hint">Latest first.</p>
+      <div id="edu-rows"></div>
+      <button type="button" class="ghost" id="add-edu">+ Add education</button>
+    </section>
+
+    <section class="step" data-step="3" aria-labelledby="h3">
+      <h2 id="h3">Skills and certifications</h2>
+      <p class="hint">Separate items with commas or new lines.</p>
+      <div class="grid one">
+        <label>Technical skills *<textarea name="technical" rows="2" data-req placeholder="Python, SQL, Flask, Git"></textarea><small class="err"></small></label>
+        <label>Soft skills<textarea name="soft" rows="2" placeholder="Communication, Teamwork"></textarea></label>
+        <label>Certifications<textarea name="certifications" rows="3" placeholder="One per line"></textarea></label>
+      </div>
+    </section>
+
+    <section class="step" data-step="4" aria-labelledby="h4">
+      <h2 id="h4">Professional summary</h2>
+      <p class="hint">Leave it blank and the rules write one from your role, experience level and skills.</p>
+      <label>Summary (optional)<textarea name="summary" rows="4" placeholder="Leave blank to auto-generate"></textarea></label>
+      <div class="actions-inline">
+        <button type="button" class="ghost" id="preview-btn">Preview the enhanced text</button>
+      </div>
+      <div id="preview" class="preview" hidden aria-live="polite"></div>
+    </section>
+
+    <p class="status" id="status" role="status" aria-live="polite"></p>
+
+    <div class="nav">
+      <button type="button" class="ghost" id="back">Back</button>
+      <button type="button" class="ghost sample" id="sample">Fill with sample data</button>
+      <button type="button" class="primary" id="next">Next</button>
+      <button type="submit" class="primary" id="generate" hidden>Generate PDF</button>
+    </div>
+  </form>
+</main>
+
+<footer class="foot">Built with Flask and ReportLab. Resumes are compiled in memory and never saved on the server.</footer>
+
+<template id="exp-tpl">
+  <div class="card row">
+    <button type="button" class="x" aria-label="Remove this experience">&times;</button>
+    <div class="grid">
+      <label>Job title / project *<input data-f="title" data-req placeholder="Data Analyst Intern"><small class="err"></small></label>
+      <label>Company / organisation *<input data-f="company" data-req placeholder="Company name"><small class="err"></small></label>
+      <label>Start<input data-f="start" type="month"></label>
+      <label>End (blank = present)<input data-f="end" type="month"></label>
+    </div>
+    <label>What did you do? (one task per line)<textarea data-f="desc" rows="4" placeholder="worked on sales dashboard&#10;Responsible for cleaning the dataset"></textarea></label>
+  </div>
+</template>
+<template id="edu-tpl">
+  <div class="card row">
+    <button type="button" class="x" aria-label="Remove this education entry">&times;</button>
+    <div class="grid">
+      <label>Degree / course *<input data-f="degree" data-req placeholder="BCA (Data Science)"><small class="err"></small></label>
+      <label>Institution *<input data-f="institution" data-req placeholder="University name"><small class="err"></small></label>
+      <label>Year<input data-f="year" placeholder="2026"></label>
+      <label>Grade<input data-f="grade" placeholder="8.4 CGPA"></label>
+    </div>
+  </div>
+</template>
+
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "personal": {"name": "Asha Verma", "email": "asha.verma@example.com", "phone": "+91 90000 00000",
+               "location": "Chennai, India", "role": "Junior Data Analyst", "link": "github.com/asha-verma"},
+  "experience": [
+    {"title": "Data Analyst Intern", "company": "Acme Analytics", "start": "2025-06", "end": "2025-12",
+     "desc": "worked on sales dashboard for weekly reports\nResponsible for cleaning and merging the customer dataset\nBuilt a Flask API that serves cleaned data\nHelped with unit tests for the pipeline"},
+    {"title": "Web Development Trainee", "company": "Sample Web Studio", "start": "2024-12", "end": "2025-03",
+     "desc": "login page for the admin portal\nPerformance improvements on the product page\nWrote project documentation"}
+  ],
+  "education": [
+    {"degree": "BCA (Data Science)", "institution": "Sample University", "year": "2026", "grade": "8.4 CGPA"},
+    {"degree": "Higher Secondary", "institution": "Sample Matric School", "year": "2023", "grade": "88%"}
+  ],
+  "skills": {"technical": "Python, SQL, Pandas, Flask, Git, HTML/CSS, JavaScript", "soft": "Communication, Teamwork, Problem solving"},
+  "certifications": "Python for Everybody\nSQL Fundamentals\nData Analysis with Pandas",
+  "summary": ""
+}
